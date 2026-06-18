@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Image Soundscape · Prince of Crows</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Cinzel:wght@400;700&display=swap');
+
+    :root {
+      --bg:       #0a0a0f;
+      --surface:  #12121a;
+      --border:   #1e1e2e;
+      --accent1:  #7c3aed;
+      --accent2:  #3b82f6;
+      --glow:     rgba(124,58,237,0.35);
+      --text:     #c8c8d8;
+      --muted:    #5a5a7a;
+      --danger:   #ef4444;
+      --success:  #22c55e;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── HEADER ─────────────────────────────────────── */
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 18px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(10,10,15,0.92);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(12px);
+    }
+
+    .logo {
+      font-family: 'Cinzel', serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: #fff;
+    }
+    .logo span { color: var(--accent1); }
+
+    .nav-link {
+      font-size: 11px;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      border: 1px solid var(--border);
+      padding: 6px 14px;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .nav-link:hover { color: var(--accent2); border-color: var(--accent2); }
+
+    /* ── MAIN LAYOUT ─────────────────────────────────── */
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 40px 20px 80px;
+    }
+
+    h1 {
+      font-family: 'Cinzel', serif;
+      font-size: 2rem;
+      font-weight: 400;
+      letter-spacing: 0.06em;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-bottom: 40px;
+    }
+
+    /* ── PANELS ──────────────────────────────────────── */
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    .panel-header {
+      background: rgba(30,30,46,0.8);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .panel-header .dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--accent1);
+      box-shadow: 0 0 6px var(--accent1);
+      flex-shrink: 0;
+    }
+
+    .panel-body { padding: 20px 18px; }
+
+    /* ── TABS ─────────────────────────────────────────── */
+    .tabs {
+      display: flex;
+      gap: 2px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab {
+      padding: 10px 20px;
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s;
+      margin-bottom: -1px;
+    }
+
+    .tab:hover { color: var(--text); }
+    .tab.active { color: #fff; border-bottom-color: var(--accent1); }
+
+    /* ── DROP ZONE ───────────────────────────────────── */
+    .drop-zone {
+      border: 1px dashed var(--border);
+      border-radius: 4px;
+      padding: 40px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      position: relative;
+    }
+
+    .drop-zone:hover, .drop-zone.drag-over {
+      border-color: var(--accent1);
+      background: rgba(124,58,237,0.06);
+    }
+
+    .drop-zone input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer;
+    }
+
+    .drop-icon {
+      font-size: 2rem;
+      display: block;
+      margin-bottom: 10px;
+      opacity: 0.4;
+    }
+
+    .drop-label {
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+    }
+
+    /* ── PREVIEW GRID ────────────────────────────────── */
+    .preview-area {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    @media (max-width: 600px) { .preview-area { grid-template-columns: 1fr; } }
+
+    .preview-box {
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: #0a0a0f;
+      aspect-ratio: 4/3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .preview-box img, .preview-box canvas {
+      width: 100%; height: 100%; object-fit: contain;
+    }
+
+    .preview-label {
+      position: absolute;
+      top: 8px; left: 10px;
+      font-size: 9px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      background: rgba(10,10,15,0.85);
+      padding: 2px 7px;
+      border-radius: 2px;
+    }
+
+    /* ── WAVEFORM ─────────────────────────────────────── */
+    .waveform-wrap {
+      position: relative;
+      margin-top: 16px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+      background: #070710;
+    }
+
+    #waveCanvas {
+      width: 100%;
+      height: 90px;
+      display: block;
+    }
+
+    .waveform-glow {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 100%, var(--glow) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* ── CONTROLS ────────────────────────────────────── */
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .btn {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 9px 18px;
+      border-radius: 3px;
+      border: 1px solid;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--accent1);
+      border-color: var(--accent1);
+      color: #fff;
+      box-shadow: 0 0 14px var(--glow);
+    }
+    .btn-primary:hover { background: #6d28d9; box-shadow: 0 0 22px var(--glow); }
+    .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; box-shadow: none; }
+
+    .btn-ghost {
+      background: transparent;
+      border-color: var(--border);
+      color: var(--muted);
+    }
+    .btn-ghost:hover { border-color: var(--accent2); color: var(--accent2); }
+    .btn-ghost:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    .btn-danger {
+      background: transparent;
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+    .btn-danger:hover { background: rgba(239,68,68,0.1); }
+
+    .status-pill {
+      font-size: 9px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid;
+      margin-left: auto;
+    }
+    .status-idle    { border-color: var(--border); color: var(--muted); }
+    .status-active  { border-color: var(--accent1); color: var(--accent1); animation: pulse 1.4s infinite; }
+    .status-ready   { border-color: var(--success); color: var(--success); }
+    .status-error   { border-color: var(--danger); color: var(--danger); }
+
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+
+    /* ── SLIDERS ─────────────────────────────────────── */
+    .params {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .param-group label {
+      display: block;
+      font-size: 9px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .param-group input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent1);
+      cursor: pointer;
+    }
+
+    .param-val {
+      font-size: 10px;
+      color: var(--accent2);
+      float: right;
+    }
+
+    /* ── CAMERA ───────────────────────────────────────── */
+    #cameraPreview, #cameraCanvas {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+
+    /* ── PROGRESS ─────────────────────────────────────── */
+    .progress-bar-wrap {
+      margin-top: 12px;
+      height: 3px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent1), var(--accent2));
+      width: 0%;
+      transition: width 0.15s;
+    }
+
+    /* ── SECTION DIVIDER ─────────────────────────────── */
+    .section-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 30px 0 20px;
+      color: var(--muted);
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+    .section-divider::before, .section-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── LOG ──────────────────────────────────────────── */
+    .log {
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 8px;
+      min-height: 16px;
+      line-height: 1.6;
+    }
+    .log .ok  { color: var(--success); }
+    .log .err { color: var(--danger); }
+    .log .inf { color: var(--accent2); }
+
+    /* ── FOOTER ───────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 22px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    footer a { color: var(--muted); text-decoration: none; transition: color 0.2s; }
+    footer a:hover { color: var(--accent2); }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Prince <span>of</span> Crows</div>
+  <a class="nav-link" href="https://talos-val.github.io/database" target="_blank" rel="noopener">↗ Database</a>
+</header>
+
+<main>
+  <h1>Image Soundscape</h1>
+  <p class="subtitle">Bilder als Klang · Klang als Bild · Umgebung aufnehmen</p>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" data-tab="img2snd">Bild → Ton</button>
+    <button class="tab" data-tab="snd2img">Ton → Bild</button>
+    <button class="tab" data-tab="camera">Kamera → Bild</button>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════
+       TAB 1: IMAGE → SOUND
+  ════════════════════════════════════════════════════ -->
+  <div id="tab-img2snd">
+
+    <div class="panel">
+      <div class="panel-header"><span class="dot"></span>Bildquelle</div>
+      <div class="panel-body">
+
+        <div class="drop-zone" id="dropZone">
+          <input type="file" id="imgInput" accept="image/*" />
+          <span class="drop-icon">⬡</span>
+          <div class="drop-label">Bild hier ablegen oder klicken<br><span style="color:var(--muted);opacity:.6">PNG · JPG · GIF · WebP</span></div>
+        </div>
+
+        <div class="preview-area" id="imgPreviewArea" style="display:none">
+          <div class="preview-box">
+            <span class="preview-label">Eingabe</span>
+            <img id="srcImg" alt="Quellbild" />
+          </div>
+          <div class="preview-box">
+            <span class="preview-label">Pixel-Map</span>
+            <canvas id="pixelCanvas"></canvas>
+          </div>
+        </div>
+
+        <div class="log" id="imgLog"></div>
+
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header"><span class="dot"></span>Syntheseparameter</div>
+      <div class="panel-body">
+        <div class="params">
+          <div class="param-group">
+            <label>Dauer (s) <span class="param-val" id="valDuration">4</span></label>
+            <input type="range" id="slDuration" min="1" max="20" value="4" step="1" />
+          </div>
+          <div class="param-group">
+            <label>Freq Min (Hz) <span class="param-val" id="valFmin">80</span></label>
+            <input type="range" id="slFmin" min="40" max="1000" value="80" step="10" />
+          </div>
+          <div class="param-group">
+            <label>Freq Max (Hz) <span class="param-val" id="valFmax">3200</span></label>
+            <input type="range" id="slFmax" min="500" max="16000" value="3200" step="100" />
+          </div>
+          <div class="param-group">
+            <label>Auflösung X <span class="param-val" id="valResX">64</span></label>
+            <input type="range" id="slResX" min="8" max="256" value="64" step="8" />
+          </div>
+          <div class="param-group">
+            <label>Auflösung Y <span class="param-val" id="valResY">32</span></label>
+            <input type="range" id="slResY" min="4" max="128" value="32" step="4" />
+          </div>
+          <div class="param-group">
+            <label>Wellenform
+              <span class="param-val" id="valWave">sine</span>
+            </label>
+            <input type="range" id="slWave" min="0" max="3" value="0" step="1" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header"><span class="dot"></span>Ausgabe · Tonspur</div>
+      <div class="panel-body">
+
+        <div class="waveform-wrap">
+          <canvas id="waveCanvas" height="90"></canvas>
+          <div class="waveform-glow"></div>
+        </div>
+
+        <div class="progress-bar-wrap" id="progressWrap" style="display:none">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <div class="controls">
+          <button class="btn btn-primary" id="btnSynth" disabled>Synthetisieren</button>
+          <button class="btn btn-ghost" id="btnPlay" disabled>▶ Abspielen</button>
+          <button class="btn btn-ghost" id="btnStop" disabled>■ Stop</button>
+          <button class="btn btn-ghost" id="btnExport" disabled>↓ WAV Export</button>
+          <span class="status-pill status-idle" id="statusPill">Bereit</span>
+        </div>
+
+        <div class="log" id="synthLog"></div>
+
+      </div>
+    </div>
+
+  </div><!-- /tab-img2snd -->
+
+
+  <!-- ════════════════════════════════════════════════════
+       TAB 2: SOUND → IMAGE
+  ════════════════════════════════════════════════════ -->
+  <div id="tab-snd2img" class="hidden">
+
+    <div class="panel">
+      <div class="panel-header"><span class="dot"></span>Tonquelle</div>
+      <div class="panel-body">
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+          <button class="btn btn-ghost" id="btnRecMic">⏺ Mikrofon aufnehmen</button>
+          <button class="btn btn-danger hidden" id="btnStopRec">■ Aufnahme stoppen</button>
+          <label class="btn btn-ghost" style="cursor:pointer">
+            ↑ Audio-Datei laden
+            <input type="file" id="audioFileInput" accept="audio/*" style="display:none" />
+          </label>
+          <button class="btn btn-ghost" id="btnUseGenerated" disabled>← Synthetisierten Ton nutzen</button>
+        </div>
+
+        <div class="log" id="audioLog">Noch keine Audioquelle geladen.</div>
+
+        <div class="waveform-wrap" style="margin-top:12px">
+          <canvas id="waveCanvas2" height="90"></canvas>
+          <div class="waveform-glow"></div>
+        </div>
+
+        <div class="controls">
+          <button class="btn btn-ghost" id="btnPreviewAudio" disabled>▶ Vorschau</button>
+          <button class="btn btn-ghost" id="btnStopPreview" disabled>■ Stop</button>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header"><span class="dot"></span>Rekonstruktionsparameter</div>
+      <div class="panel-body">
+        <div class="params">
+          <div class="param-group">
+            <label>Ausgabebreite <span class="param-val" id="valOutW">256</span></label>
+            <input type="range" id="slOutW" min="32" max="512" value="256" step="32" />
+          </div>
+          <div class="param-group">
+            <label>Ausgabehöhe <span class="param-val" id="valOutH">128</span></label>
+            <input type="range" id="slOutH" min="16" max="512" value="128" step="16" />
+          </div>
+          <div class="param-group">
+            <label>Farbmodus <span class="param-val" id="valColorMode">grau</span></label>
+            <input type="range" id="slColorMode" min="0" max="2" value="0" step="1" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header"><span class="dot"></span>Rekonstruiertes Bild</div>
+      <div class="panel-body">
+
+        <div class="controls" style="margin-top:0;margin-bottom:14px">
+          <button class="btn btn-primary" id="btnDecode" disabled>Bild rekonstruieren</button>
+          <button class="btn btn-ghost" id="btnSaveImg" disabled>↓ PNG speichern</button>
+        </div>
+
+        <div class="preview-box" style="aspect-ratio:2/1;max-height:280px">
+          <span class="preview-label">Ausgabe</span>
+          <canvas id="decodedCanvas"></canvas>
+        </div>
+
+        <div class="log" id="decodeLog" style="margin-top:8px"></div>
+
+      </div>
+    </div>
+
+  </div><!-- /tab-snd2img -->
+
+
+  <!-- ════════════════════════════════════════════════════
+       TAB 3: CAMERA → IMAGE
+  ════════════════════════════════════════════════════ -->
+  <div id="tab-camera" class="hidden">
+
+    <div class="panel">
+      <div class="panel-header"><span class="dot"></span>Kamera-Eingang</div>
+      <div class="panel-body">
+
+        <div class="preview-area">
+          <div class="preview-box">
+            <span class="preview-label">Live</span>
+            <video id="cameraPreview" autoplay muted playsinline></video>
+          </div>
+          <div class="preview-box">
+            <span class="preview-label">Aufnahme</span>
+            <canvas id="cameraCanvas"></canvas>
+          </div>
+        </div>
+
+        <div class="controls">
+          <button class="btn btn-primary" id="btnStartCam">Kamera starten</button>
+          <button class="btn btn-ghost" id="btnCapture" disabled>📷 Aufnehmen</button>
+          <button class="btn btn-ghost" id="btnStopCam" disabled>■ Stop</button>
+          <button class="btn btn-ghost" id="btnCamToSound" disabled>→ Als Ton synthetisieren</button>
+          <button class="btn btn-ghost" id="btnSaveCam" disabled>↓ PNG</button>
+          <span class="status-pill status-idle" id="camStatus">Bereit</span>
+        </div>
+
+        <div class="log" id="camLog"></div>
+
+      </div>
+    </div>
+
+  </div><!-- /tab-camera -->
+
+</main>
+
+<footer>
+  <span>© 2024 Prince of Crows · Image Soundscape</span>
+  <a href="https://talos-val.github.io/database" target="_blank" rel="noopener">talos-val.github.io/database ↗</a>
+</footer>
+
+<script>
+/* =====================================================
+   UTILITIES
+===================================================== */
+const $ = id => document.getElementById(id);
+const wave_types = ['sine','triangle','sawtooth','square'];
+const color_modes = ['grau','violett','thermisch'];
+
+function setLog(id, msg, type='') {
+  const el = $(id);
+  el.innerHTML = `<span class="${type}">${msg}</span>`;
+}
+
+function setStatus(id, text, cls) {
+  const el = $(id);
+  el.textContent = text;
+  el.className = `status-pill status-${cls}`;
+}
+
+/* =====================================================
+   TABS
+===================================================== */
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    ['img2snd','snd2img','camera'].forEach(id => {
+      $('tab-'+id).classList.toggle('hidden', id !== t.dataset.tab);
+    });
+  });
+});
+
+/* =====================================================
+   SLIDER BINDINGS
+===================================================== */
+function bindSlider(slId, valId, formatter) {
+  const sl = $(slId), vl = $(valId);
+  const upd = () => vl.textContent = formatter ? formatter(sl.value) : sl.value;
+  sl.addEventListener('input', upd);
+  upd();
+}
+
+bindSlider('slDuration','valDuration');
+bindSlider('slFmin','valFmin');
+bindSlider('slFmax','valFmax');
+bindSlider('slResX','valResX');
+bindSlider('slResY','valResY');
+bindSlider('slWave','valWave', v => wave_types[v]);
+bindSlider('slOutW','valOutW');
+bindSlider('slOutH','valOutH');
+bindSlider('slColorMode','valColorMode', v => color_modes[v]);
+
+/* =====================================================
+   IMAGE LOAD  (Tab 1)
+===================================================== */
+let srcImageData = null;
+let generatedBuffer = null;
+let audioCtx = null;
+let playingSource = null;
+
+const dropZone    = $('dropZone');
+const imgInput    = $('imgInput');
+const srcImg      = $('srcImg');
+const pixelCanvas = $('pixelCanvas');
+const imgPreviewArea = $('imgPreviewArea');
+
+function loadImageFile(file) {
+  if (!file || !file.type.startsWith('image/')) {
+    setLog('imgLog','Bitte eine Bilddatei wählen.','err'); return;
+  }
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.onload = () => {
+    srcImg.src = url;
+    imgPreviewArea.style.display = 'grid';
+    // draw pixel map
+    const rX = +$('slResX').value, rY = +$('slResY').value;
+    pixelCanvas.width = rX; pixelCanvas.height = rY;
+    const ctx = pixelCanvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, rX, rY);
+    srcImageData = ctx.getImageData(0, 0, rX, rY);
+    $('btnSynth').disabled = false;
+    setLog('imgLog', `Geladen: ${img.naturalWidth}×${img.naturalHeight}px → Raster ${rX}×${rY}`, 'ok');
+  };
+  img.src = url;
+}
+
+imgInput.addEventListener('change', e => { if(e.target.files[0]) loadImageFile(e.target.files[0]); });
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('drag-over');
+  if(e.dataTransfer.files[0]) loadImageFile(e.dataTransfer.files[0]);
+});
+
+// redraw pixel map on resolution change
+['slResX','slResY'].forEach(id => {
+  $(id).addEventListener('input', () => {
+    if(!srcImg.src) return;
+    const img = new Image(); img.src = srcImg.src;
+    img.onload = () => {
+      const rX = +$('slResX').value, rY = +$('slResY').value;
+      pixelCanvas.width = rX; pixelCanvas.height = rY;
+      const ctx = pixelCanvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, rX, rY);
+      srcImageData = ctx.getImageData(0, 0, rX, rY);
+      setLog('imgLog', `Raster aktualisiert: ${rX}×${rY}`, 'inf');
+    };
+  });
+});
+
+/* =====================================================
+   WAVEFORM DRAW
+===================================================== */
+function drawWaveform(canvasId, buffer, playing=false) {
+  const canvas = $(canvasId);
+  const ctx = canvas.getContext('2d');
+  const W = canvas.offsetWidth || 800, H = 90;
+  canvas.width = W; canvas.height = H;
+  ctx.clearRect(0,0,W,H);
+
+  if (!buffer) return;
+  const data = buffer.getChannelData(0);
+  const step = Math.ceil(data.length / W);
+  const mid = H / 2;
+
+  // gradient
+  const grad = ctx.createLinearGradient(0,0,W,0);
+  grad.addColorStop(0, '#7c3aed');
+  grad.addColorStop(1, '#3b82f6');
+  ctx.strokeStyle = grad;
+  ctx.lineWidth = 1.5;
+
+  ctx.beginPath();
+  for (let x = 0; x < W; x++) {
+    let min=1, max=-1;
+    for (let j = 0; j < step; j++) {
+      const v = data[x*step+j] || 0;
+      if (v < min) min = v;
+      if (v > max) max = v;
+    }
+    ctx.moveTo(x, mid + min*mid*0.9);
+    ctx.lineTo(x, mid + max*mid*0.9);
+  }
+  ctx.stroke();
+
+  if (playing) {
+    ctx.fillStyle = 'rgba(124,58,237,0.12)';
+    ctx.fillRect(0,0,W,H);
+  }
+}
+
+/* =====================================================
+   SYNTHESIZE  (Image → Audio)
+===================================================== */
+async function synthesize(imgData) {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+  const rX     = imgData.width;
+  const rY     = imgData.height;
+  const dur    = +$('slDuration').value;
+  const fMin   = +$('slFmin').value;
+  const fMax   = +$('slFmax').value;
+  const wType  = wave_types[+$('slWave').value];
+  const sRate  = audioCtx.sampleRate;
+  const total  = Math.floor(sRate * dur);
+
+  const offCtx = new OfflineAudioContext(1, total, sRate);
+  const colDur = dur / rX;
+
+  const pb = $('progressBar'), pw = $('progressWrap');
+  pw.style.display = 'block'; pb.style.width = '0%';
+
+  for (let x = 0; x < rX; x++) {
+    const tStart = x * colDur;
+    for (let y = 0; y < rY; y++) {
+      const idx = (y * rX + x) * 4;
+      const r = imgData.data[idx];
+      const g = imgData.data[idx+1];
+      const b = imgData.data[idx+2];
+      const bright = (r*0.299 + g*0.587 + b*0.114) / 255;
+      if (bright < 0.05) continue;
+
+      const freq = fMin + (y / rY) * (fMax - fMin);
+      const gain = bright * 0.08;
+
+      const osc  = offCtx.createOscillator();
+      const gNode = offCtx.createGain();
+      osc.type = wType;
+      osc.frequency.value = freq;
+      gNode.gain.setValueAtTime(0, tStart);
+      gNode.gain.linearRampToValueAtTime(gain, tStart + colDur*0.1);
+      gNode.gain.linearRampToValueAtTime(0,    tStart + colDur);
+      osc.connect(gNode);
+      gNode.connect(offCtx.destination);
+      osc.start(tStart);
+      osc.stop(tStart + colDur);
+    }
+    if (x % 8 === 0) {
+      pb.style.width = ((x/rX)*100).toFixed(0)+'%';
+      await new Promise(r => setTimeout(r,0));
+    }
+  }
+
+  pb.style.width = '100%';
+  const rendered = await offCtx.startRendering();
+  pw.style.display = 'none';
+  return rendered;
+}
+
+$('btnSynth').addEventListener('click', async () => {
+  if (!srcImageData) return;
+  $('btnSynth').disabled = true;
+  setStatus('statusPill','Synthetisiere…','active');
+  setLog('synthLog','Verarbeite Pixel…','inf');
+  try {
+    generatedBuffer = await synthesize(srcImageData);
+    drawWaveform('waveCanvas', generatedBuffer);
+    $('btnPlay').disabled   = false;
+    $('btnExport').disabled = false;
+    $('btnUseGenerated').disabled = false;
+    setStatus('statusPill','Fertig','ready');
+    setLog('synthLog',`Tonspur: ${generatedBuffer.duration.toFixed(2)}s, ${generatedBuffer.sampleRate}Hz`, 'ok');
+  } catch(e) {
+    setStatus('statusPill','Fehler','error');
+    setLog('synthLog','Fehler: '+e.message,'err');
+  }
+  $('btnSynth').disabled = false;
+});
+
+$('btnPlay').addEventListener('click', () => {
+  if (!generatedBuffer) return;
+  if (!audioCtx) audioCtx = new AudioContext();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  if (playingSource) { playingSource.stop(); playingSource = null; }
+  playingSource = audioCtx.createBufferSource();
+  playingSource.buffer = generatedBuffer;
+  playingSource.connect(audioCtx.destination);
+  playingSource.start();
+  $('btnStop').disabled = false;
+  setStatus('statusPill','Spielt ab…','active');
+  drawWaveform('waveCanvas', generatedBuffer, true);
+  playingSource.onended = () => {
+    setStatus('statusPill','Fertig','ready');
+    drawWaveform('waveCanvas', generatedBuffer);
+    $('btnStop').disabled = true;
+  };
+});
+
+$('btnStop').addEventListener('click', () => {
+  if (playingSource) { playingSource.stop(); playingSource = null; }
+  setStatus('statusPill','Bereit','idle');
+  $('btnStop').disabled = true;
+});
+
+/* WAV Export */
+$('btnExport').addEventListener('click', () => {
+  if (!generatedBuffer) return;
+  const wav = bufferToWav(generatedBuffer);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([wav], {type:'audio/wav'}));
+  a.download = 'image-soundscape.wav';
+  a.click();
+});
+
+function bufferToWav(buffer) {
+  const ch = buffer.numberOfChannels, sr = buffer.sampleRate;
+  const len = buffer.length;
+  const ab = new ArrayBuffer(44 + len * ch * 2);
+  const v = new DataView(ab);
+  function ws(o, s) { for(let i=0;i<s.length;i++) v.setUint8(o+i,s.charCodeAt(i)); }
+  function wu16(o, n) { v.setUint16(o,n,true); }
+  function wu32(o, n) { v.setUint32(o,n,true); }
+  ws(0,'RIFF'); wu32(4,36+len*ch*2); ws(8,'WAVE');
+  ws(12,'fmt '); wu32(16,16); wu16(20,1); wu16(22,ch);
+  wu32(24,sr); wu32(28,sr*ch*2); wu16(32,ch*2); wu16(34,16);
+  ws(36,'data'); wu32(40,len*ch*2);
+  const d = buffer.getChannelData(0);
+  let off = 44;
+  for(let i=0;i<len;i++){
+    let s = Math.max(-1,Math.min(1,d[i]));
+    v.setInt16(off, s<0?s*0x8000:s*0x7FFF, true); off+=2;
+  }
+  return ab;
+}
+
+/* =====================================================
+   AUDIO → IMAGE  (Tab 2)
+===================================================== */
+let audioBuffer2 = null;
+let mediaRecorder = null;
+let recChunks = [];
+let previewSrc = null;
+
+function loadAudioBuffer(arrayBuf) {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  audioCtx.decodeAudioData(arrayBuf, buf => {
+    audioBuffer2 = buf;
+    drawWaveform('waveCanvas2', buf);
+    $('btnDecode').disabled     = false;
+    $('btnPreviewAudio').disabled = false;
+    setLog('audioLog', `Audio geladen: ${buf.duration.toFixed(2)}s`, 'ok');
+  }, err => {
+    setLog('audioLog','Dekodierfehler: '+err,'err');
+  });
+}
+
+$('audioFileInput').addEventListener('change', e => {
+  const f = e.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = ev => loadAudioBuffer(ev.target.result);
+  r.readAsArrayBuffer(f);
+});
+
+$('btnUseGenerated').addEventListener('click', () => {
+  if (!generatedBuffer) return;
+  audioBuffer2 = generatedBuffer;
+  drawWaveform('waveCanvas2', audioBuffer2);
+  $('btnDecode').disabled      = false;
+  $('btnPreviewAudio').disabled = false;
+  setLog('audioLog','Synthetisierter Ton übernommen.','ok');
+  // switch tab
+  document.querySelector('[data-tab="snd2img"]').click();
+});
+
+$('btnRecMic').addEventListener('click', async () => {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    mediaRecorder = new MediaRecorder(stream);
+    recChunks = [];
+    mediaRecorder.ondataavailable = e => recChunks.push(e.data);
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(recChunks, {type:'audio/webm'});
+      blob.arrayBuffer().then(ab => loadAudioBuffer(ab));
+      stream.getTracks().forEach(t => t.stop());
+    };
+    mediaRecorder.start();
+    $('btnRecMic').classList.add('hidden');
+    $('btnStopRec').classList.remove('hidden');
+    setLog('audioLog','Aufnahme läuft…','active');
+  } catch(e) {
+    setLog('audioLog','Mikrofon nicht verfügbar: '+e.message,'err');
+  }
+});
+
+$('btnStopRec').addEventListener('click', () => {
+  if(mediaRecorder) mediaRecorder.stop();
+  $('btnStopRec').classList.add('hidden');
+  $('btnRecMic').classList.remove('hidden');
+});
+
+$('btnPreviewAudio').addEventListener('click', () => {
+  if(!audioBuffer2) return;
+  if(!audioCtx) audioCtx = new AudioContext();
+  if(audioCtx.state==='suspended') audioCtx.resume();
+  if(previewSrc) { previewSrc.stop(); previewSrc=null; }
+  previewSrc = audioCtx.createBufferSource();
+  previewSrc.buffer = audioBuffer2;
+  previewSrc.connect(audioCtx.destination);
+  previewSrc.start();
+  $('btnStopPreview').disabled=false;
+  previewSrc.onended = () => $('btnStopPreview').disabled=true;
+});
+$('btnStopPreview').addEventListener('click', () => {
+  if(previewSrc){ previewSrc.stop(); previewSrc=null; }
+  $('btnStopPreview').disabled=true;
+});
+
+/* Decode audio → image */
+$('btnDecode').addEventListener('click', () => {
+  if (!audioBuffer2) return;
+  const W = +$('slOutW').value;
+  const H = +$('slOutH').value;
+  const cm = +$('slColorMode').value;
+
+  const data = audioBuffer2.getChannelData(0);
+  const canvas = $('decodedCanvas');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  const img = ctx.createImageData(W, H);
+
+  const sampPerPx = Math.floor(data.length / (W*H));
+  for (let i = 0; i < W*H; i++) {
+    let sum = 0;
+    for (let j = 0; j < sampPerPx; j++) sum += Math.abs(data[i*sampPerPx+j]||0);
+    let v = Math.min(1, sum / sampPerPx * 8);
+    let r,g,b;
+    if (cm === 0) { r=g=b=Math.round(v*255); }
+    else if (cm === 1) { r=Math.round(v*124); g=Math.round(v*58); b=Math.round(v*237); }
+    else {
+      // thermisch
+      const t = v;
+      r = Math.round(Math.min(255, t*2*255));
+      g = Math.round(Math.max(0, Math.min(255, (t-0.25)*4*255)));
+      b = Math.round(Math.max(0, 255 - t*255));
+    }
+    const base = i*4;
+    img.data[base]=r; img.data[base+1]=g; img.data[base+2]=b; img.data[base+3]=255;
+  }
+  ctx.putImageData(img,0,0);
+  $('btnSaveImg').disabled = false;
+  setLog('decodeLog',`Bild rekonstruiert: ${W}×${H}px`,'ok');
+});
+
+$('btnSaveImg').addEventListener('click', () => {
+  const canvas = $('decodedCanvas');
+  const a = document.createElement('a');
+  a.href = canvas.toDataURL('image/png');
+  a.download = 'soundscape-image.png';
+  a.click();
+});
+
+/* =====================================================
+   CAMERA  (Tab 3)
+===================================================== */
+let camStream = null;
+
+$('btnStartCam').addEventListener('click', async () => {
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}, audio:false});
+    $('cameraPreview').srcObject = camStream;
+    $('btnCapture').disabled = false;
+    $('btnStopCam').disabled = false;
+    $('btnStartCam').disabled = true;
+    setStatus('camStatus','Live','active');
+    setLog('camLog','Kamera aktiv.','ok');
+  } catch(e) {
+    setStatus('camStatus','Fehler','error');
+    setLog('camLog','Kamera nicht verfügbar: '+e.message,'err');
+  }
+});
+
+$('btnCapture').addEventListener('click', () => {
+  const video = $('cameraPreview');
+  const canvas = $('cameraCanvas');
+  canvas.width  = video.videoWidth  || 640;
+  canvas.height = video.videoHeight || 480;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  $('btnSaveCam').disabled    = false;
+  $('btnCamToSound').disabled = false;
+  setLog('camLog',`Aufgenommen: ${canvas.width}×${canvas.height}px`,'ok');
+});
+
+$('btnStopCam').addEventListener('click', () => {
+  if(camStream) camStream.getTracks().forEach(t=>t.stop());
+  camStream = null;
+  $('cameraPreview').srcObject = null;
+  $('btnCapture').disabled = true;
+  $('btnStopCam').disabled = true;
+  $('btnStartCam').disabled = false;
+  setStatus('camStatus','Bereit','idle');
+});
+
+$('btnSaveCam').addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.href = $('cameraCanvas').toDataURL('image/png');
+  a.download = 'kamera-aufnahme.png';
+  a.click();
+});
+
+$('btnCamToSound').addEventListener('click', async () => {
+  const canvas = $('cameraCanvas');
+  const rX = +$('slResX').value, rY = +$('slResY').value;
+  // downscale
+  const tmp = document.createElement('canvas');
+  tmp.width=rX; tmp.height=rY;
+  tmp.getContext('2d').drawImage(canvas,0,0,rX,rY);
+  const id = tmp.getContext('2d').getImageData(0,0,rX,rY);
+
+  // switch to Tab 1 and synth
+  document.querySelector('[data-tab="img2snd"]').click();
+  srcImg.src = canvas.toDataURL();
+  $('imgPreviewArea').style.display='grid';
+  pixelCanvas.width=rX; pixelCanvas.height=rY;
+  pixelCanvas.getContext('2d').drawImage(tmp,0,0);
+  srcImageData = id;
+
+  $('btnSynth').disabled=false;
+  setLog('imgLog','Kamera-Aufnahme übertragen, bereit zum Synthetisieren.','ok');
+});
+
+/* =====================================================
+   DRAW IDLE WAVEFORMS
+===================================================== */
+function drawIdle(canvasId) {
+  const canvas = $(canvasId);
+  const W = canvas.offsetWidth || 800, H = 90;
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+  const grad = ctx.createLinearGradient(0,0,W,0);
+  grad.addColorStop(0,'#3b1578'); grad.addColorStop(1,'#1e3a5f');
+  ctx.strokeStyle = grad; ctx.lineWidth=1;
+  ctx.beginPath();
+  for(let x=0;x<W;x++) {
+    const y = H/2 + Math.sin(x*0.04)*4 + Math.sin(x*0.011)*8;
+    x===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+  }
+  ctx.stroke();
+}
+
+setTimeout(() => { drawIdle('waveCanvas'); drawIdle('waveCanvas2'); }, 100);
+window.addEventListener('resize', () => {
+  if(generatedBuffer) drawWaveform('waveCanvas', generatedBuffer);
+  else drawIdle('waveCanvas');
+  if(audioBuffer2) drawWaveform('waveCanvas2', audioBuffer2);
+  else drawIdle('waveCanvas2');
+});
+</script>
+</body>
+</html>
