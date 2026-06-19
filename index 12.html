@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Soundpic v7.0 // CROW-OS</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+    :root {
+      --bg:#080c08; --surface:#0c110c; --border:#1a2a1a;
+      --green:#22c55e; --green2:#4ade80; --dim:#2d4a2d; --muted:#4a7a4a;
+      --warn:#eab308; --err:#ef4444; --text:#a8d8a8; --bright:#e0ffe0;
+      --glow:rgba(34,197,94,0.18);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html,body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono','Courier New',monospace;font-size:13px;min-height:100vh;overflow-x:hidden;line-height:1.5}
+    #bootLog{padding:14px 28px 8px;border-bottom:1px solid var(--border);font-size:11px;color:var(--muted)}
+    #bootLog .ok{color:var(--green)} #bootLog .warn{color:var(--warn)} #bootLog .tag{color:var(--dim)}
+    header{border-bottom:1px solid var(--border);padding:9px 28px;display:flex;align-items:center;justify-content:space-between;background:var(--surface);position:sticky;top:0;z-index:100}
+    .prompt-line{font-size:12px;color:var(--muted)}
+    .prompt-line .host{color:var(--green)} .prompt-line .cmd{color:var(--bright)}
+    .nav-link{font-size:10px;color:var(--muted);text-decoration:none;letter-spacing:.1em;border:1px solid var(--border);padding:4px 10px;transition:.15s}
+    .nav-link:hover{color:var(--green);border-color:var(--green)}
+    main{max-width:860px;margin:0 auto;padding:24px 20px 60px}
+    .sys-title{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+    .sys-title span{color:var(--green)}
+    .sys-subtitle{font-size:10px;color:var(--dim);margin-bottom:20px}
+    .tabs{display:flex;gap:0;margin-bottom:16px;border-bottom:1px solid var(--border)}
+    .tab{padding:7px 16px;font-family:inherit;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);background:none;border:none;border-bottom:1px solid transparent;cursor:pointer;transition:.15s;margin-bottom:-1px}
+    .tab:hover{color:var(--text)} .tab.active{color:var(--green);border-bottom-color:var(--green)}
+    .panel{border:1px solid var(--border);margin-bottom:14px;background:var(--surface)}
+    .panel-header{background:rgba(8,12,8,.95);border-bottom:1px solid var(--border);padding:6px 14px;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:8px}
+    .panel-header .cursor{color:var(--green);animation:blink 1s step-end infinite}
+    @keyframes blink{50%{opacity:0}}
+    .panel-body{padding:14px}
+    .drop-zone{border:1px dashed var(--border);padding:28px 20px;text-align:center;cursor:pointer;transition:.15s;position:relative;background:var(--bg)}
+    .drop-zone:hover,.drop-zone.drag-over{border-color:var(--green);background:rgba(34,197,94,.04)}
+    .drop-zone input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer}
+    .drop-icon{font-size:1.3rem;display:block;margin-bottom:7px;opacity:.5;color:var(--green)}
+    .drop-label{color:var(--muted);font-size:10px;letter-spacing:.08em}
+    .drop-label span{color:var(--dim)}
+    .preview-area{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+    @media(max-width:580px){.preview-area{grid-template-columns:1fr}}
+    .preview-box{border:1px solid var(--border);background:var(--bg);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;min-height:60px}
+    .preview-box img{display:block;width:100%;height:auto;max-height:320px;object-fit:contain}
+    .preview-box canvas{display:block;width:100%;height:auto;max-height:320px;object-fit:contain;image-rendering:pixelated}
+    .preview-label{position:absolute;top:5px;left:7px;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);background:rgba(8,12,8,.85);padding:1px 5px}
+    .controls{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:11px}
+    .btn{font-family:inherit;font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:5px 12px;border-radius:0;border:1px solid;cursor:pointer;transition:.15s}
+    .btn-primary{background:transparent;border-color:var(--green);color:var(--green)}
+    .btn-primary:hover{background:rgba(34,197,94,.1);box-shadow:0 0 8px var(--glow)}
+    .btn-primary:disabled{opacity:.3;cursor:not-allowed;box-shadow:none}
+    .btn-ghost{background:transparent;border-color:var(--border);color:var(--muted)}
+    .btn-ghost:hover{border-color:var(--muted);color:var(--text)}
+    .btn-ghost:disabled{opacity:.25;cursor:not-allowed}
+    .params{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px;margin-top:12px}
+    .param-group label{display:block;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+    .param-group input[type="range"]{width:100%;accent-color:var(--green);cursor:pointer}
+    .param-val{font-size:10px;color:var(--green);float:right}
+    .progress-bar-wrap{margin-top:9px;height:2px;background:var(--border);overflow:hidden}
+    .progress-bar{height:100%;background:var(--green);width:0%;transition:width .15s}
+    .log{font-size:10px;color:var(--muted);margin-top:6px;min-height:14px;line-height:1.6}
+    .log .ok::before{content:'[OK] ';color:var(--dim)} .log .ok{color:var(--green)}
+    .log .err::before{content:'[ERR] ';color:var(--dim)} .log .err{color:var(--err)}
+    .log .inf::before{content:'[INFO] ';color:var(--dim)} .log .inf{color:var(--text)}
+    .info-box{border:1px solid var(--border);padding:7px 11px;font-size:10px;color:var(--muted);letter-spacing:.04em;margin-bottom:12px;line-height:1.7}
+    .info-box::before{content:'// ';color:var(--dim)} .info-box strong{color:var(--text)}
+    footer{border-top:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:10px;color:var(--dim)}
+    footer a{color:var(--muted);text-decoration:none;transition:.15s} footer a:hover{color:var(--green)}
+    .hidden{display:none!important}
+    .mode-badge{display:inline-block;font-size:9px;letter-spacing:.1em;padding:2px 6px;border:1px solid var(--green);color:var(--green);margin-left:8px;vertical-align:middle}
+    /* ── TOAST ── */
+    #crow-toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(30px);z-index:9999;background:var(--surface);border:1px solid var(--green);padding:14px 22px 14px 18px;max-width:500px;width:90%;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;box-shadow:0 0 28px rgba(34,197,94,.13)}
+    #crow-toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+    #crow-toast .toast-tag{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--green);margin-bottom:7px}
+    #crow-toast .toast-msg{font-size:11px;color:var(--text);line-height:1.65}
+    #crow-toast .toast-close{position:absolute;top:8px;right:10px;font-size:10px;color:var(--muted);cursor:pointer;background:none;border:none;font-family:inherit;letter-spacing:.05em}
+    #crow-toast .toast-close:hover{color:var(--green)}
+  </style>
+</head>
+<body>
+<div id="crow-toast">
+  <div class="toast-tag">// CROW-OS Studios</div>
+  <div class="toast-msg" id="crow-toast-msg"></div>
+  <button class="toast-close" onclick="closeCrowToast()">[ schließen ]</button>
+</div>
+<div id="bootLog">
+  <span class="tag">CROW-OS 3.2.0-lts</span> &nbsp;|&nbsp;
+  <span class="ok">[ OK ]</span> loading module: soundpic v7 &hellip; &nbsp;
+  <span class="ok">[ OK ]</span> PCM-direct encoder: ready &nbsp;
+  <span class="ok">[ OK ]</span> rendering interface &hellip;
+</div>
+<header>
+  <div class="prompt-line">
+    <span class="host">root@crow</span><span style="color:var(--dim)">:~# </span><span class="cmd">exec ./soundpic --mode=pcm-direct</span>
+  </div>
+  <a class="nav-link" href="https://talos-val.github.io/database" target="_blank" rel="noopener">↗ /database</a>
+</header>
+<main>
+  <div class="sys-title">// SOUNDPIC <span>v7.0</span> <span class="mode-badge">PCM-DIRECT</span></div>
+  <div class="sys-subtitle">Pixel = Sample &middot; Verlustfrei &middot; Kurze Dateien &mdash; CROW-OS</div>
+  <div class="tabs">
+    <button class="tab active" data-tab="img2snd">[ img &rarr; snd ]</button>
+    <button class="tab" data-tab="snd2img">[ snd &rarr; img ]</button>
+  </div>
+  <!-- TAB 1: IMAGE → SOUND -->
+  <div id="tab-img2snd">
+    <div class="panel">
+      <div class="panel-header"><span class="cursor">&#9646;</span> bildquelle</div>
+      <div class="panel-body">
+        <div class="drop-zone" id="dropZone">
+          <input type="file" id="imgInput" accept="image/*" />
+          <span class="drop-icon">&#11041;</span>
+          <div class="drop-label">Bild ablegen oder klicken<br><span>PNG &middot; JPG &middot; GIF &middot; WebP</span></div>
+        </div>
+        <div class="preview-area" id="imgPreviewArea" style="display:none">
+          <div class="preview-box">
+            <span class="preview-label">eingabe</span>
+            <img id="srcImg" alt="Quellbild" />
+          </div>
+          <div class="preview-box">
+            <span class="preview-label">pixel-map</span>
+            <canvas id="pixelCanvas"></canvas>
+          </div>
+        </div>
+        <div class="log" id="imgLog"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header"><span class="cursor">&#9646;</span> kodierungsparameter</div>
+      <div class="panel-body">
+        <div class="info-box">
+          <strong>PCM-Direct-Modus:</strong> Jeder Pixel = 1–3 Audio-Samples. Audiodauer &asymp; <strong id="durEst">–</strong> &middot; Dateigr&ouml;&szlig;e &asymp; <strong id="sizeEst">–</strong>
+        </div>
+        <div class="params">
+          <div class="param-group">
+            <label>Aufl&ouml;sung <span class="param-val" id="valRes">Original</span></label>
+            <input type="range" id="slRes" min="0" max="5" value="5" step="1" />
+            <div style="font-size:9px;color:var(--dim);margin-top:4px" id="resHint"></div>
+          </div>
+          <div class="param-group">
+            <label>Sample-Rate <span class="param-val" id="valRate">44100 Hz</span></label>
+            <input type="range" id="slRate" min="0" max="3" value="1" step="1" />
+          </div>
+          <div class="param-group">
+            <label>Modus</label>
+            <label style="font-size:11px;color:var(--text);display:flex;align-items:center;gap:6px;cursor:pointer">
+              <input type="checkbox" id="chkColor" style="accent-color:var(--green);cursor:pointer" checked /> Farbe (RGB)
+            </label>
+            <div style="font-size:9px;color:var(--dim);margin-top:5px">Deaktiviert = Graustufen (1/3 Gr&ouml;&szlig;e)</div>
+          </div>
+          <div class="param-group">
+            <label>Bit-Tiefe <span class="param-val" id="valBits">16 bit</span></label>
+            <input type="range" id="slBits" min="0" max="1" value="1" step="1" />
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header"><span class="cursor">&#9646;</span> ausgabe</div>
+      <div class="panel-body">
+        <div class="progress-bar-wrap" id="progressWrap" style="display:none">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="controls">
+          <button class="btn btn-primary" id="btnEncode" disabled>Kodieren &amp; WAV exportieren</button>
+          <button class="btn btn-ghost" id="btnUseGenerated" disabled>&rarr; snd&rarr;img</button>
+        </div>
+        <div class="log" id="encodeLog"></div>
+      </div>
+    </div>
+  </div>
+  <!-- TAB 2: SOUND → IMAGE -->
+  <div id="tab-snd2img" class="hidden">
+    <div class="panel">
+      <div class="panel-header"><span class="cursor">&#9646;</span> wav-quelle</div>
+      <div class="panel-body">
+        <div class="info-box">
+          <strong>PCM-Dekodierung:</strong> WAV-Datei &rarr; Pixel auslesen &rarr; Bild rekonstruieren. Nur mit diesem Tool kodierte Dateien werden korrekt dekodiert.
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+          <button class="btn btn-ghost" onclick="document.getElementById('audioFileInput').click()">&#8593; WAV laden</button>
+          <input type="file" id="audioFileInput" accept=".wav,.wave,audio/*" style="display:none" />
+          <button class="btn btn-ghost" id="btnUseEncoded" disabled>&larr; Kodierten Ton verwenden</button>
+        </div>
+        <div class="log" id="audioLog">Noch keine WAV-Datei geladen.</div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header"><span class="cursor">&#9646;</span> rekonstruiertes bild</div>
+      <div class="panel-body">
+        <div class="controls" style="margin-top:0;margin-bottom:11px">
+          <button class="btn btn-primary" id="btnDecode" disabled>Bild dekodieren</button>
+          <button class="btn btn-ghost" id="btnSaveImg" disabled>&#8595; PNG speichern</button>
+        </div>
+        <div class="progress-bar-wrap" id="decodeProgressWrap" style="display:none">
+          <div class="progress-bar" id="decodeProgressBar"></div>
+        </div>
+        <div class="preview-box" style="min-height:80px">
+          <span class="preview-label">ausgabe</span>
+          <canvas id="decodedCanvas"></canvas>
+        </div>
+        <div class="log" id="decodeLog" style="margin-top:7px"></div>
+      </div>
+    </div>
+  </div>
+</main>
+<footer>
+  <span>CROW-OS 3.2.0-lts &nbsp;|&nbsp; soundpic v7 &nbsp;|&nbsp; &copy; Prince of Crows</span>
+  <a href="https://talos-val.github.io/database" target="_blank" rel="noopener">talos-val.github.io/database &nearr;</a>
+</footer>
+<script>
+const $ = id => document.getElementById(id);
+// ── TOAST ────────────────────────────────────────────────────────────────────
+let _toastTimer = null;
+function showCrowToast(msg) {
+  $('crow-toast-msg').textContent = msg;
+  const t = $('crow-toast');
+  t.classList.add('show');
+  if (_toastTimer) clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => t.classList.remove('show'), 7000);
+}
+function closeCrowToast() {
+  $('crow-toast').classList.remove('show');
+  if (_toastTimer) clearTimeout(_toastTimer);
+}
+// ── MAGIC HEADER ─────────────────────────────────────────────────────────────
+// W und H werden verlustfrei als (high/256, low%256) normalisiert kodiert,
+// um Float32-Rundungsfehler bei großen Auflösungen zu vermeiden.
+const HDR_LEN = 9;
+const MAGIC_A = 0.1337;
+const MAGIC_B = 0.4242;
+function writeHeader(data, W, H, isColor, is16bit) {
+  data[0] = MAGIC_A;
+  data[1] = MAGIC_B;
+  data[2] = Math.floor(W / 256) / 255;
+  data[3] = (W % 256) / 255;
+  data[4] = Math.floor(H / 256) / 255;
+  data[5] = (H % 256) / 255;
+  data[6] = isColor ? 0.9 : 0.1;
+  data[7] = is16bit ? 0.9 : 0.1;
+  data[8] = MAGIC_A;
+}
+function readHeader(data) {
+  if (data.length < HDR_LEN) return null;
+  if (Math.abs(data[0] - MAGIC_A) > 0.005) return null;
+  if (Math.abs(data[1] - MAGIC_B) > 0.005) return null;
+  if (Math.abs(data[8] - MAGIC_A) > 0.005) return null;
+  const W = Math.round(data[2] * 255) * 256 + Math.round(data[3] * 255);
+  const H = Math.round(data[4] * 255) * 256 + Math.round(data[5] * 255);
+  if (W < 1 || H < 1 || W > 65535 || H > 65535) return null;
+  const isColor = data[6] > 0.5;
+  const is16bit = data[7] > 0.5;
+  return { W, H, isColor, is16bit };
+}
+// ── RESOLUTION PRESETS ───────────────────────────────────────────────────────
+const RES_LABELS = ['32×32', '64×64', '128×128', '256×256', '512×512', 'Original'];
+const RES_PIXELS = [1024, 4096, 16384, 65536, 262144, null];
+const RATE_VALUES = [22050, 44100, 48000, 96000];
+const RATE_LABELS = ['22050 Hz', '44100 Hz', '48000 Hz', '96000 Hz'];
+const BITS_LABELS = ['8 bit', '16 bit'];
+let srcImageData = null;
+let origImgW = 0, origImgH = 0;
+let encodedRawData = null;
+let encodedMeta = null;
+let decodedWavBytes = null;
+// ── UI helpers ───────────────────────────────────────────────────────────────
+function setLog(id, msg, type='') { $(id).innerHTML = `<span class="${type}">${msg}</span>`; }
+function bindSlider(slId, valId, fmt) {
+  const sl=$(slId), vl=$(valId);
+  const upd = () => vl.textContent = fmt(sl.value);
+  sl.addEventListener('input', upd); upd();
+}
+bindSlider('slRes',  'valRes',  v => RES_LABELS[+v]);
+bindSlider('slRate', 'valRate', v => RATE_LABELS[+v]);
+bindSlider('slBits', 'valBits', v => BITS_LABELS[+v]);
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    ['img2snd','snd2img'].forEach(id => {
+      $('tab-'+id).classList.toggle('hidden', id !== t.dataset.tab);
+    });
+  });
+});
+// ── ESTIMATE helper ──────────────────────────────────────────────────────────
+function updateEstimates() {
+  if (!origImgW) return;
+  const { rX, rY } = calcResolution();
+  const isColor = $('chkColor').checked;
+  const is16bit = +$('slBits').value === 1;
+  const sRate = RATE_VALUES[+$('slRate').value];
+  const channels = isColor ? 3 : 1;
+  const totalSamples = HDR_LEN + rX * rY * channels;
+  const durSec = totalSamples / sRate;
+  const bytesPCM = totalSamples * (is16bit ? 2 : 1);
+  const wavBytes = 44 + bytesPCM;
+  const fmtDur = durSec < 1 ? `${(durSec*1000).toFixed(0)} ms`
+                : durSec < 60 ? `${durSec.toFixed(2)} s`
+                : `${(durSec/60).toFixed(1)} min`;
+  const fmtSize = wavBytes < 1024*1024 ? `${(wavBytes/1024).toFixed(0)} KB`
+                : `${(wavBytes/1024/1024).toFixed(1)} MB`;
+  $('durEst').textContent = fmtDur;
+  $('sizeEst').textContent = fmtSize;
+  $('resHint').textContent = `→ ${rX}×${rY}px`;
+}
+['slRes','slRate','slBits'].forEach(id => $(id).addEventListener('input', updateEstimates));
+$('chkColor').addEventListener('change', updateEstimates);
+function calcResolution() {
+  const preset = +$('slRes').value;
+  const maxPx = RES_PIXELS[preset];
+  if (maxPx === null || (origImgW * origImgH <= (maxPx || Infinity))) {
+    return { rX: origImgW, rY: origImgH };
+  }
+  const ratio = origImgW / origImgH;
+  const rX = Math.max(1, Math.round(Math.sqrt(maxPx * ratio)));
+  const rY = Math.max(1, Math.round(Math.sqrt(maxPx / ratio)));
+  return { rX, rY };
+}
+// ── IMAGE LOADING ─────────────────────────────────────────────────────────────
+const dropZone = $('dropZone');
+const pixelCanvas = $('pixelCanvas');
+function loadImageFile(file) {
+  if (!file || !file.type.startsWith('image/')) {
+    setLog('imgLog','Bitte eine Bilddatei wählen.','err'); return;
+  }
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.onload = () => {
+    origImgW = img.naturalWidth;
+    origImgH = img.naturalHeight;
+    $('srcImg').src = url;
+    $('imgPreviewArea').style.display = 'grid';
+    drawPreview(img);
+    $('btnEncode').disabled = false;
+    updateEstimates();
+    setLog('imgLog', `Geladen: ${origImgW}×${origImgH}px`, 'ok');
+  };
+  img.src = url;
+}
+function drawPreview(imgEl) {
+  const { rX, rY } = calcResolution();
+  pixelCanvas.width = rX; pixelCanvas.height = rY;
+  const ctx = pixelCanvas.getContext('2d');
+  ctx.drawImage(imgEl, 0, 0, rX, rY);
+  srcImageData = ctx.getImageData(0, 0, rX, rY);
+}
+$('imgInput').addEventListener('change', e => { if(e.target.files[0]) loadImageFile(e.target.files[0]); });
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('drag-over');
+  if(e.dataTransfer.files[0]) loadImageFile(e.dataTransfer.files[0]);
+});
+$('slRes').addEventListener('input', () => {
+  if (!$('srcImg').src) return;
+  const img = new Image();
+  img.onload = () => { drawPreview(img); updateEstimates(); };
+  img.src = $('srcImg').src;
+});
+// ── ENCODER ───────────────────────────────────────────────────────────────────
+function encodeDirect(imgData, isColor, is16bit) {
+  const { data, width: W, height: H } = imgData;
+  const channels = isColor ? 3 : 1;
+  const samplesPerPixel = is16bit ? 2 : 1;
+  const totalSamples = HDR_LEN + W * H * channels * samplesPerPixel;
+  const out = new Float32Array(totalSamples);
+  writeHeader(out, W, H, isColor, is16bit);
+  let s = HDR_LEN;
+  for (let i = 0; i < W * H; i++) {
+    const base = i * 4;
+    const numCh = isColor ? 3 : 1;
+    for (let c = 0; c < numCh; c++) {
+      let val;
+      if (isColor) {
+        val = data[base + c];
+      } else {
+        val = Math.round(data[base]*0.299 + data[base+1]*0.587 + data[base+2]*0.114);
+      }
+      if (is16bit) {
+        out[s++] = (val / 127.5) - 1.0;
+        out[s++] = 0.0;
+      } else {
+        out[s++] = (val / 127.5) - 1.0;
+      }
+    }
+  }
+  return out;
+}
+function samplesToWav(samples, sampleRate, is16bit) {
+  const bitsPerSample = is16bit ? 16 : 8;
+  const bytesPerSample = bitsPerSample / 8;
+  const dataBytes = samples.length * bytesPerSample;
+  const buf = new ArrayBuffer(44 + dataBytes);
+  const v = new DataView(buf);
+  const ws = (o, s) => { for(let i=0;i<s.length;i++) v.setUint8(o+i, s.charCodeAt(i)); };
+  ws(0,'RIFF'); v.setUint32(4, 36+dataBytes, true); ws(8,'WAVE');
+  ws(12,'fmt '); v.setUint32(16,16,true);
+  v.setUint16(20, is16bit ? 1 : 1, true);
+  v.setUint16(22, 1, true);
+  v.setUint32(24, sampleRate, true);
+  v.setUint32(28, sampleRate * bytesPerSample, true);
+  v.setUint16(32, bytesPerSample, true);
+  v.setUint16(34, bitsPerSample, true);
+  ws(36,'data'); v.setUint32(40, dataBytes, true);
+  let off = 44;
+  if (is16bit) {
+    for (let i = 0; i < samples.length; i++) {
+      const s = Math.max(-1, Math.min(1, samples[i]));
+      v.setInt16(off, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+      off += 2;
+    }
+  } else {
+    for (let i = 0; i < samples.length; i++) {
+      const s = Math.max(-1, Math.min(1, samples[i]));
+      v.setUint8(off, Math.round((s + 1) * 127.5));
+      off += 1;
+    }
+  }
+  return buf;
+}
+$('btnEncode').addEventListener('click', async () => {
+  if (!srcImageData && !$('srcImg').src) return;
+  const img = new Image();
+  img.src = $('srcImg').src;
+  await new Promise(r => { if(img.complete) r(); else img.onload = r; });
+  drawPreview(img);
+  const isColor = $('chkColor').checked;
+  const is16bit = +$('slBits').value === 1;
+  const sRate = RATE_VALUES[+$('slRate').value];
+  const { rX, rY } = calcResolution();
+  $('btnEncode').disabled = true;
+  $('progressWrap').style.display = 'block';
+  $('progressBar').style.width = '10%';
+  setLog('encodeLog', `Kodiere ${rX}×${rY}px (${isColor?'RGB':'Graustufen'}, ${is16bit?'16':'8'}-bit, ${sRate} Hz)...`, 'inf');
+  await new Promise(r => setTimeout(r, 20));
+  $('progressBar').style.width = '40%';
+  const samples = encodeDirect(srcImageData, isColor, is16bit);
+  $('progressBar').style.width = '70%';
+  await new Promise(r => setTimeout(r, 10));
+  const wavBuf = samplesToWav(samples, sRate, is16bit);
+  $('progressBar').style.width = '100%';
+  encodedRawData = samples;
+  encodedMeta = { W: rX, H: rY, isColor, is16bit, sampleRate: sRate };
+  decodedWavBytes = wavBuf;
+
+  // Sevatar-Style Toast (WAV Download)
+  showCrowToast("Frequenzen sauber moduliert. Wir danken Euch für Euer Vertrauen in unsere Systeme, Nutzer. Mögen diese Klänge Eure Erwartungen fehlerfrei erfüllen.");
+
+  const blob = new Blob([wavBuf], { type: 'audio/wav' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `soundpic_${rX}x${rY}.wav`;
+  a.click();
+  const sz = wavBuf.byteLength;
+  const fmtSz = sz < 1048576 ? `${(sz/1024).toFixed(0)} KB` : `${(sz/1048576).toFixed(1)} MB`;
+  setLog('encodeLog', `Fertig: ${rX}×${rY}px · ${samples.length} Samples · ${(samples.length/sRate).toFixed(2)}s · ${fmtSz}`, 'ok');
+  $('progressWrap').style.display = 'none';
+  $('progressBar').style.width = '0%';
+  $('btnEncode').disabled = false;
+  $('btnUseGenerated').disabled = false;
+});
+$('btnUseGenerated').addEventListener('click', () => {
+  if (!encodedRawData || !encodedMeta) return;
+  pendingDecodeData = encodedRawData;
+  pendingDecodeMeta = encodedMeta;
+  setLog('audioLog', `Kodierter Ton übernommen: ${encodedMeta.W}×${encodedMeta.H}px · ${encodedMeta.isColor?'RGB':'Graustufen'} · ${encodedMeta.is16bit?'16':'8'}-bit`, 'ok');
+  $('btnDecode').disabled = false;
+  $('btnUseEncoded').disabled = false;
+  document.querySelector('[data-tab="snd2img"]').click();
+});
+// ── DECODER ───────────────────────────────────────────────────────────────────
+let pendingDecodeData = null;
+let pendingDecodeMeta = null;
+$('audioFileInput').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const wavBuf = ev.target.result;
+    const v = new DataView(wavBuf);
+    const audioFmt = v.getUint16(20, true);
+    const numCh   = v.getUint16(22, true);
+    const sRate   = v.getUint32(24, true);
+    const bps     = v.getUint16(34, true);
+    let dataOff = 12;
+    let dataLen = 0;
+    while (dataOff < wavBuf.byteLength - 8) {
+      const tag = String.fromCharCode(v.getUint8(dataOff), v.getUint8(dataOff+1), v.getUint8(dataOff+2), v.getUint8(dataOff+3));
+      const chunkLen = v.getUint32(dataOff+4, true);
+      if (tag === 'data') { dataOff += 8; dataLen = chunkLen; break; }
+      dataOff += 8 + chunkLen;
+    }
+    if (dataLen === 0) { setLog('audioLog','WAV-Datenfehler: kein data-chunk.','err'); return; }
+    const bytesPerSample = bps / 8;
+    const numSamples = Math.floor(dataLen / bytesPerSample);
+    const samples = new Float32Array(numSamples);
+    for (let i = 0; i < numSamples; i++) {
+      const off = dataOff + i * bytesPerSample;
+      if (bps === 16) {
+        samples[i] = v.getInt16(off, true) / 32768.0;
+      } else if (bps === 8) {
+        samples[i] = (v.getUint8(off) / 127.5) - 1.0;
+      }
+    }
+    const meta = readHeader(samples);
+    if (!meta) {
+      setLog('audioLog','Kein gültiger Soundpic-Header gefunden. Nur mit diesem Tool kodierte WAV-Dateien werden unterstützt.','err');
+      return;
+    }
+    pendingDecodeData = samples;
+    pendingDecodeMeta = { ...meta, sampleRate: sRate };
+    setLog('audioLog', `WAV geladen: ${meta.W}×${meta.H}px · ${meta.isColor?'RGB':'Graustufen'} · ${meta.is16bit?'16':'8'}-bit · ${(numSamples/sRate).toFixed(2)}s`, 'ok');
+    $('btnDecode').disabled = false;
+  };
+  reader.readAsArrayBuffer(f);
+});
+$('btnUseEncoded').addEventListener('click', () => {
+  if (!encodedRawData) return;
+  pendingDecodeData = encodedRawData;
+  pendingDecodeMeta = encodedMeta;
+  setLog('audioLog', 'Kodierter Ton für Dekodierung gesetzt.', 'ok');
+  $('btnDecode').disabled = false;
+});
+$('btnDecode').addEventListener('click', async () => {
+  if (!pendingDecodeData || !pendingDecodeMeta) return;
+  const { W, H, isColor, is16bit } = pendingDecodeMeta;
+  const samples = pendingDecodeData;
+  const channels = isColor ? 3 : 1;
+  const samplesPerPixel = is16bit ? 2 : 1;
+  $('decodeProgressWrap').style.display = 'block';
+  $('decodeProgressBar').style.width = '0%';
+  $('btnDecode').disabled = true;
+  setLog('decodeLog', `Dekodiere ${W}×${H}px...`, 'inf');
+  await new Promise(r => setTimeout(r, 20));
+  const canvas = $('decodedCanvas');
+  canvas.width = W; canvas.height = H;
+  canvas.style.width = '100%'; canvas.style.height = 'auto';
+  canvas.style.imageRendering = 'pixelated';
+  const ctx = canvas.getContext('2d');
+  const imgData = ctx.createImageData(W, H);
+  let s = HDR_LEN;
+  const CHUNK = 512;
+  for (let i = 0; i < W * H; i += CHUNK) {
+    const end = Math.min(i + CHUNK, W * H);
+    for (let px = i; px < end; px++) {
+      const base = px * 4;
+      if (isColor) {
+        for (let c = 0; c < 3; c++) {
+          const raw = samples[s] || 0;
+          s += 1;
+          const val = Math.round((raw + 1.0) * 127.5);
+          imgData.data[base + c] = Math.max(0, Math.min(255, val));
+        }
+      } else {
+        const raw = samples[s] || 0;
+        s += 1;
+        const val = Math.round((raw + 1.0) * 127.5);
+        const v = Math.max(0, Math.min(255, val));
+        imgData.data[base] = v; imgData.data[base+1] = v; imgData.data[base+2] = v;
+      }
+      imgData.data[base + 3] = 255;
+    }
+    ctx.putImageData(imgData, 0, 0);
+    $('decodeProgressBar').style.width = ((end / (W*H))*100).toFixed(0) + '%';
+    await new Promise(r => setTimeout(r, 0));
+  }
+  $('decodeProgressWrap').style.display = 'none';
+  $('btnDecode').disabled = false;
+  $('btnSaveImg').disabled = false;
+  setLog('decodeLog', `Fertig: ${W}×${H}px rekonstruiert.`, 'ok');
+});
+$('btnSaveImg').addEventListener('click', async () => {
+  // Sevatar-Style Toast (PNG Download)
+  showCrowToast("Bildmatrix erfolgreich rekonstruiert. Ausgezeichnete Wahl. Vielen Dank für die Nutzung unserer Software – wir wissen Eure Loyalität zu schätzen.");
+
+  $('btnSaveImg').disabled = true;
+  setLog('decodeLog', 'Exportiere PNG...', 'inf');
+  const blob = await new Promise(r => $('decodedCanvas').toBlob(r, 'image/png'));
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'soundpic-decoded.png';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+  setLog('decodeLog', 'PNG gespeichert.', 'ok');
+  $('btnSaveImg').disabled = false;
+});
+</script>
+</body>
+</html>
